@@ -1,0 +1,8 @@
+<button (click)="_startRecording()">record</button>
+<button (click)="_stopRecording()">stop</button>
+
+<div *ngIf="audioURL$ | async">
+    <app-player [audioURL$]="audioURL$"></app-player>
+</div>
+
+
