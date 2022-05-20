@@ -1,40 +1,89 @@
-import { AfterViewInit, Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
+import { BehaviorSubject, from } from 'rxjs';
+import { AudioStream, StreamState } from 'rxjs-audio';
+
+
 
 @Component({
   selector: 'app-player',
   templateUrl: './player.component.html',
   styleUrls: ['./player.component.css']
 })
-export class PlayerComponent implements OnInit, AfterViewInit {
+export class PlayerComponent implements OnInit {
   @Input() audioURL$: any
- 
+  @ViewChild('audioRef') audioRefTS!: ElementRef<HTMLAudioElement>;
+  @ViewChild('volumeRef') volumeRef!: any
+  @ViewChild('seekRef') seekRef!: any
 
-  @ViewChild('stream') audioRef!: ElementRef<HTMLAudioElement>;
+  // get $player(): HTMLAudioElement {
+  //   return this.audioRefTS.nativeElement;
+  // }
 
-  @ViewChild('rangeRef') rangeRef!: any
+  currentTimeSubject = new BehaviorSubject<any>(0)
+  currentTime$ = this.currentTimeSubject.asObservable()
 
-  get $player(): HTMLAudioElement {
-    return this.audioRef.nativeElement;
-  }
+  durationSubject = new BehaviorSubject<any>(0)
+  duration$ = this.durationSubject.asObservable()
 
-  // audioFile = document.getElementsByTagName('audio')[0];
-  
+  // fooSub = new BehaviorSubject<any>(true)
+  // foo$ = this.fooSub.asObservable()
 
-  constructor() { }
+  audioStream!: AudioStream
+  state!: StreamState
+
+  constructor(private sanitizer: DomSanitizer) { }
 
   ngOnInit(): void {
-    
+    this.audioStream = new AudioStream();
+    this.audioURL$.subscribe((track: any) => {
+      this.sanitizer.bypassSecurityTrustUrl(track)
+      this.audioStream.loadTrack(track);
+    })
+
+    this.audioStream.getState().subscribe(state => {
+      console.log('state', state)
+      this.state = state
+    })
   }
 
-  ngAfterViewInit() {
-  
-    console.log(this.$player.volume = .5);
+  pause() {
+    this.audioStream.pause()
+  }
+
+  stop() {
+    this.audioStream.stop()
+  }
+
+  play() {
+    this.audioStream.play()
+    this.getCurrentTime()
+  }
+
+  getCurrentTime() {
+    this.audioStream.events().subscribe(event => {
+      console.log('event',event)
+      if(event.type === 'pause') {
+        console.log('goose me time evnet')
+      }
+    })
   }
 
   slideVoluem(v: any, e: Event) {
-    console.log('range value',v)
-    this.$player.volume = v
+    console.log('volume value', v)
+    this.audioStream.setVolume(v)
+  }
 
+  seek(v: any, e: Event) {
+    console.log('seek value', v)
+    this.audioStream.seekTo(v)
+  }
+
+  convertTime(time: number) {
+  }
+
+  download() {
+    // this.$player.preload = 'auto';
   }
 
 }

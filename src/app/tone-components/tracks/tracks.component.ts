@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { BehaviorSubject } from 'rxjs';
 import * as Tone from 'tone';
+import { AudioStream } from 'rxjs-audio';
 
 @Component({
   selector: 'app-tracks',
@@ -43,7 +44,8 @@ export class TracksComponent implements OnInit {
   _stopRecording = async () => {
     const recording = await this._recorder.stop();
     let rec = URL.createObjectURL(recording)
-    this.audioURLSubject.next(this.sanitizer.bypassSecurityTrustUrl(rec))
+    this.audioURLSubject.next(rec)
+    // this.audioURLSubject.next(this.sanitizer.bypassSecurityTrustUrl(rec))
 
     console.log('disconnect record start')
     this._audioContext.disconnect(this._recorder)
