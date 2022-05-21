@@ -10,14 +10,12 @@ import { AudioStream, StreamState } from 'rxjs-audio';
 })
 export class PlayerComponent implements OnInit {
   @Input() audioURL$: any
+  @Input() recording$: any
   @ViewChild('audioRef') audioRefTS!: ElementRef<HTMLAudioElement>;
   @ViewChild('volumeRef') volumeRef!: any
   @ViewChild('seekRef') seekRef!: any
 
-  // get $player(): HTMLAudioElement {
-  //   return this.audioRefTS.nativeElement;
-  // }
-
+  audUrl: any
   currentTimeSubject = new BehaviorSubject<any>(0)
   currentTime$ = this.currentTimeSubject.asObservable()
 
@@ -29,20 +27,31 @@ export class PlayerComponent implements OnInit {
 
   audioStream!: AudioStream
   state!: StreamState
+  recBlob!: Blob;
 
-  constructor(private sanitizer: DomSanitizer) { }
+  constructor(public sanitizer: DomSanitizer) { }
 
   ngOnInit(): void {
     this.audioStream = new AudioStream();
     this.audioURL$.subscribe((track: any) => {
       this.sanitizer.bypassSecurityTrustUrl(track)
       this.audioStream.loadTrack(track);
+      this.audUrl = this.sanitizer.bypassSecurityTrustUrl(track);
+      console.log(track, 'trck')
+      console.log(this.audUrl.changingThisBreaksApplicationSecurity, ' aud url')
     })
 
     this.audioStream.getState().subscribe(state => {
       console.log('state', state)
+      console.log('state', state.trackInfo.currentTrack)
       this.state = state
     })
+
+    this.recording$.subscribe((v: any) => {
+      console.log('recording$',v)
+      this.recBlob = v
+    })
+
   }
 
   pause() {
@@ -80,8 +89,17 @@ export class PlayerComponent implements OnInit {
   convertTime(time: number) {
   }
 
-  download() {
-    // this.$player.preload = 'auto';
+ async download() {
+    let anc =document.createElement('a')
+    let rdr = new FileReader()
+    rdr.readAsDataURL(this.recBlob)
+
+    rdr.onload = () => {
+      anc.href = rdr.result as string
+      anc.download = "audio"
+      anc.click()
+    }
+    
   }
 
 }

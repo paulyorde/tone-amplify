@@ -13,6 +13,10 @@ export class TracksComponent implements OnInit {
   audioURLSubject = new BehaviorSubject<any>(null)
   audioURL$  = this.audioURLSubject.asObservable()
 
+  recordingSubject = new BehaviorSubject<any>(null)
+  recording$ = this.recordingSubject.asObservable()
+
+
  
 
   _recorder = new Tone.Recorder();
@@ -43,6 +47,7 @@ export class TracksComponent implements OnInit {
 
   _stopRecording = async () => {
     const recording = await this._recorder.stop();
+    this.recordingSubject.next(recording)
     let rec = URL.createObjectURL(recording)
     this.audioURLSubject.next(rec)
     // this.audioURLSubject.next(this.sanitizer.bypassSecurityTrustUrl(rec))

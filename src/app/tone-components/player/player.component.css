@@ -1,7 +1,11 @@
 .player-container {
     display: flex;
+    justify-content: space-around;
+    flex-direction: column;
 }
 
 .player-play-container {
     display: flex;
+    justify-content: space-evenly;
+    align-items: center;
 }
