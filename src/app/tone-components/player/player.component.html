@@ -1,19 +1,36 @@
 <div *ngIf="audioURL$ | async">
-    <!-- <audio preload="auto" controls id='audio' #audioRef ontimeupdate="seek()">
+    <div class="player-container">
+        <!-- <audio preload="auto" controls id='audio' #audioRef ontimeupdate="seek()">
         <source [src]="audioURL$ | async" />
     </audio> -->
-    <button (click)="play()">play</button>
-    <button (click)="pause()">pause</button>
-    <button (click)="stop()">stop</button>
+    <!-- <button (click)="play()"><i (click)="play()" class='fas fa-play'></i></button> -->
+   <div class="player-play-container">
+    <div>
+        <i class='fas fa-backward'></i>
+    </div>
+    <div>
+        <i (click)="play()" class='fas fa-play'></i>
+    </div>
+    <div>
+        <i class='fas fa-forward'></i>
+    </div>
+  
+   </div>
+    <!-- <i (click)="pause()" class='fas fa-pause'></i>
+    <i (click)="stop()" class='fas fa-stop'></i> -->
+    
+    <!-- <button (click)="pause()">pause</button>
+    <button (click)="stop()">stop</button> -->
 
     <p>volume</p>
     <input #volumeRef type="range" value="0" min="0" max="1" step=".01" (change)="slideVoluem(volumeRef.value, $event)"/>
 
     <p>seek</p>
-    <input #seekRef type="range" value="0" min="0" max="4" step="1" (change)="seek(seekRef.value, $event)" />
+    <input #seekRef type="range" value="0" min="0" max="100" step=".1" (change)="seek(seekRef.value, $event)" />
 
     <div *ngIf="state?.trackInfo?.currentTime">
         <p>current track time</p>{{state.trackInfo.currentTime}}
+    </div>
     </div>
     
 </div>

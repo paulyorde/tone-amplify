@@ -3,8 +3,6 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { BehaviorSubject, from } from 'rxjs';
 import { AudioStream, StreamState } from 'rxjs-audio';
 
-
-
 @Component({
   selector: 'app-player',
   templateUrl: './player.component.html',
@@ -57,10 +55,10 @@ export class PlayerComponent implements OnInit {
 
   play() {
     this.audioStream.play()
-    this.getCurrentTime()
+    this.getAudioEvents()
   }
 
-  getCurrentTime() {
+  getAudioEvents() {
     this.audioStream.events().subscribe(event => {
       console.log('event',event)
       if(event.type === 'pause') {
