@@ -39,6 +39,7 @@ export class PlayerComponent implements OnInit {
       this.audUrl = this.sanitizer.bypassSecurityTrustUrl(track);
       console.log(track, 'trck')
       console.log(this.audUrl.changingThisBreaksApplicationSecurity, ' aud url')
+      console.log('stream', this.audioStream)
     })
 
     this.audioStream.getState().subscribe(state => {
@@ -65,6 +66,7 @@ export class PlayerComponent implements OnInit {
   play() {
     this.audioStream.play()
     this.getAudioEvents()
+
   }
 
   getAudioEvents() {
@@ -87,6 +89,14 @@ export class PlayerComponent implements OnInit {
   }
 
   convertTime(time: number) {
+  }
+
+  upload() {
+    let upload =  document.getElementById('uploadAudioFie')
+    upload?.addEventListener('change', (e) => {
+      console.log('upload dir', e)
+
+    })
   }
 
  async download() {

@@ -1,4 +1,4 @@
-<div *ngIf="audioURL$ | async">
+<!-- <div *ngIf="audioURL$ | async"> -->
     <div class="player-container">
             <!-- <audio preload="auto" controls id='audio' #audioRef ontimeupdate="seek()">
             <source [src]="audioURL$ | async" />
@@ -36,11 +36,11 @@
         </a> -->
         <button (click)="download()">download</button>
 
-        <input type="file" accept="audio/*" capture id="fileaud" />
+        <input type="file" accept="audio/*" capture id="uploadAudioFie" (click)="upload()"/>
 
     </div>
     
-</div>
+<!-- </div> -->
 
 
 
