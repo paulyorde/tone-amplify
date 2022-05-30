@@ -1,11 +1,11 @@
 <!-- <button (click)="_startRecording()">record</button> -->
-<button (click)="startDeviceAudioInputStream();this.webAudioContext.resume();" id="start">record</button>
-<button (click)="_stopRecording()" id="stop">stop</button>
+<button (click)="startDeviceAudioInputStream();" id="start">record</button>
+<button id="stop">stop</button>
 
-<canvas id="canvas"></canvas>
+<canvas id="canvas" #canvas></canvas>
 
 <!-- <div *ngIf="audioURL$ | async"> -->
-    <app-player [audioURL$]="audioURL$" [recording$]="recording$"></app-player>
+    <app-player [audioURL$]="audioURL$" [recording$]="recording$" [sourceNode$]="sourceNode$"></app-player>
 <!-- </div> -->
 
 

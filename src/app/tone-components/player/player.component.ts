@@ -11,6 +11,7 @@ import { AudioStream, StreamState } from 'rxjs-audio';
 export class PlayerComponent implements OnInit {
   @Input() audioURL$: any
   @Input() recording$: any
+  @Input() sourceNode$: any
   @ViewChild('audioRef') audioRefTS!: ElementRef<HTMLAudioElement>;
   @ViewChild('volumeRef') volumeRef!: any
   @ViewChild('seekRef') seekRef!: any
@@ -28,12 +29,17 @@ export class PlayerComponent implements OnInit {
   audioStream!: AudioStream
   state!: StreamState
   recBlob!: Blob;
+  sourceNode!: any;
 
   constructor(public sanitizer: DomSanitizer) { }
 
   ngOnInit(): void {
+    // need sourc node .resume() on play
     this.audioStream = new AudioStream();
     this.audioURL$.subscribe((track: any) => {
+      /**
+       * gets URLBlob created in Track
+       */
       this.sanitizer.bypassSecurityTrustUrl(track)
       this.audioStream.loadTrack(track);
       this.audUrl = this.sanitizer.bypassSecurityTrustUrl(track);
@@ -53,6 +59,23 @@ export class PlayerComponent implements OnInit {
       this.recBlob = v
     })
 
+    /**
+     * source coming should be able to play w/out setting url
+     */
+    this.sourceNode$.subscribe((sourceNode: any) => {
+      console.log(sourceNode,'source node subscribe')
+      let rec
+      if(sourceNode) {
+        //  rec = URL.createObjectURL(sourceNode.mediaStream)
+
+      }
+      console.log('recd::',rec)
+      this.sourceNode = sourceNode
+      this.sanitizer.bypassSecurityTrustUrl(sourceNode)
+      this.audioStream.loadTrack(sourceNode);
+      this.audUrl = this.sanitizer.bypassSecurityTrustUrl(sourceNode);
+    })
+
   }
 
   pause() {
@@ -64,8 +87,9 @@ export class PlayerComponent implements OnInit {
   }
 
   play() {
-    this.audioStream.play()
-    this.getAudioEvents()
+    // this.audioStream.play()
+    // this.getAudioEvents()
+    this.sourceNode.start()
 
   }
 
