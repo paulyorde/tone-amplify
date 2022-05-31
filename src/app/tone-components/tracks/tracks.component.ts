@@ -136,8 +136,10 @@ export class TracksComponent implements OnInit {
     }
   }
 
-  recordStream(stream?: any) {
-    this.webAudioContext.resume()
+  async recordStream(stream?: any) {
+    if(this.webAudioContext.state == 'suspended') {
+     await this.webAudioContext.resume()
+    }
     const stopButton = document.getElementById('stop')
     const data: any[] | undefined = []
     let recording: any
@@ -146,8 +148,11 @@ export class TracksComponent implements OnInit {
     recording = this.record(stream, data, this.sourceNode)
     
     if (stopButton) {
-      stopButton.onclick = () => {
+      stopButton.onclick = async () => {
         recording.stop();
+        if(this.webAudioContext.state == 'running') {
+          await this.webAudioContext.suspend()
+        }
         // this.webAudioContext.suspend()
         // this.recordingSubject.next(recording)
         // if (this.webAudioContext.state === 'running') {
@@ -176,6 +181,7 @@ export class TracksComponent implements OnInit {
       new Blob(data).arrayBuffer()
         .then(arrayBuffer => this.webAudioContext.decodeAudioData(arrayBuffer))
         .then(audioBuffer => sourceNode.buffer = audioBuffer)
+        
     }
     /** Send to Player */
     this.sourceNodeSubject.next(sourceNode)
