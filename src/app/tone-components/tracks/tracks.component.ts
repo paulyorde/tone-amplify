@@ -23,6 +23,7 @@ export class TracksComponent implements OnInit {
   userMediaRecording: any
 
   sourceNode!: any
+  analyzerSourceNode!: any
 
   mediaRecorder: any
 
@@ -43,12 +44,15 @@ export class TracksComponent implements OnInit {
     this.startDeviceAudioInputStream()
   };
 
-  startDeviceAudioInputStream = () => {
-
-    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+  startDeviceAudioInputStream =  () => {
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(async (stream) => {
+      if(this.webAudioContext.state == 'suspended') {
+       await this.webAudioContext.resume()
+      }
       this.recordStream(stream)
-      // this.analyze3D(stream)
+      this.analyze3D(stream)
       console.log('audio state::', this.webAudioContext.state)
+      
     })
   
     

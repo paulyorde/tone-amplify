@@ -32,6 +32,8 @@ export class PlayerComponent implements OnInit {
   sourceNode!: any;
   toneContext!: any;
 
+  player!: Tone.Player;
+
   constructor(public sanitizer: DomSanitizer) { }
 
   ngOnInit(): void {
@@ -64,20 +66,35 @@ export class PlayerComponent implements OnInit {
   }
 
   pause() {
-   
+   this.player
   }
 
   stop() {
     // this.audioStream.stop()
-    this.sourceNode.stop()
+    this.player.stop()
+    // this.sourceNode.stop()
   }
 
-  play() {
-    console.log('src buffer::',this.sourceNode.buffer)
-    Tone.start()
-    const player = new Tone.Player(this.sourceNode.buffer).toDestination()
-    console.log('player', player)
-    player.start()
+  async  play() {
+    // console.log('src buffer::',this.sourceNode.buffer)
+    await Tone.start()
+   
+    this.player = new Tone.Player(this.sourceNode.buffer).toDestination()
+    this.player.start()
+    
+    
+    // let srcNode: AudioBufferSourceNode = this.sourceNode
+    // this.player.sync().start(srcNode.context.currentTime)
+    // this.player.volume.value = 5
+    // console.log('player', this.player.state)
+    
+    // if(this.player.state == 'stopped') {
+    //   console.log('stopped')
+    //  Tone.Transport.start()
+    //  console.log('transport', Tone.Transport.state)
+    //  console.log('transport', srcNode.context.currentTime)
+    // }
+   
     // this.audioStream.play()
     // this.getAudioEvents()
 
