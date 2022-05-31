@@ -74,6 +74,7 @@ export class PlayerComponent implements OnInit {
       this.sanitizer.bypassSecurityTrustUrl(sourceNode)
       this.audioStream.loadTrack(sourceNode);
       this.audUrl = this.sanitizer.bypassSecurityTrustUrl(sourceNode);
+      
     })
 
   }

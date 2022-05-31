@@ -1,0 +1,31 @@
+navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+      // this.recordStream(stream)
+      // this.analyze3D(stream)
+      // let destinationStream = this.webAudioContext.createMediaStreamDestination()
+    
+      console.log('des stream', destinationStream)
+
+      this.recordStream(destinationStream.stream)
+      this.analyze3D(destinationStream)
+      
+      // if(!(this.webAudioContext.state === 'suspended')) {
+      //   console.log('running')
+      //   this.recordStream(stream)
+      //   this.analyze3D(stream)
+      // }
+
+      console.log('audio state::', this.webAudioContext.state)
+      
+
+    
+
+      // if(this.webAudioContext.state === 'suspended') {
+      //   this.webAudioContext.resume().then(function() {
+      //     console.log('resuming')
+      //   });
+      // }
+  
+      // if(resFlag) {
+      //   this.webAudioContext.resume()
+      // }
+    })
