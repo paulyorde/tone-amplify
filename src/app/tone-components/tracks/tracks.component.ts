@@ -12,6 +12,10 @@ export class TracksComponent implements OnInit {
   recordingSubject = new BehaviorSubject<any>(null)
   recording$ = this.recordingSubject.asObservable()
 
+  toneContextSubject = new BehaviorSubject<any>(null)
+  toneContext$ = this.toneContextSubject.asObservable()
+  
+
   _reverb = new Tone.Reverb({ "wet": 1, "decay": 1.9, "preDelay": 1.00 })
   // options = {debug: true, delayTime: "4n", feedBack: .04}
   _pingPong = new Tone.PingPongDelay()
@@ -30,7 +34,9 @@ export class TracksComponent implements OnInit {
   constructor(private sanitizer: DomSanitizer) { }
 
   ngOnInit(): void {
-
+    Tone.setContext(this.webAudioContext)
+    this.toneContextSubject.next(Tone.context)
+    console.log('tone ctx', Tone.context)
   }
 
   _startRecording = async () => {
@@ -41,7 +47,7 @@ export class TracksComponent implements OnInit {
 
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
       this.recordStream(stream)
-      this.analyze3D(stream)
+      // this.analyze3D(stream)
       console.log('audio state::', this.webAudioContext.state)
     })
   
@@ -138,6 +144,7 @@ export class TracksComponent implements OnInit {
     if (stopButton) {
       stopButton.onclick = () => {
         recording.stop();
+        // this.webAudioContext.suspend()
         // this.recordingSubject.next(recording)
         // if (this.webAudioContext.state === 'running') {
         //   this.webAudioContext.suspend().then(function (v) {

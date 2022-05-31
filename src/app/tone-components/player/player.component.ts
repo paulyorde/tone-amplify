@@ -2,6 +2,7 @@ import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { BehaviorSubject, from } from 'rxjs';
 import { AudioStream, StreamState } from 'rxjs-audio';
+import * as Tone from 'tone';
 
 @Component({
   selector: 'app-player',
@@ -9,14 +10,12 @@ import { AudioStream, StreamState } from 'rxjs-audio';
   styleUrls: ['./player.component.css']
 })
 export class PlayerComponent implements OnInit {
-  @Input() audioURL$: any
+  @Input() toneContext$: any
   @Input() recording$: any
   @Input() sourceNode$: any
-  @ViewChild('audioRef') audioRefTS!: ElementRef<HTMLAudioElement>;
   @ViewChild('volumeRef') volumeRef!: any
   @ViewChild('seekRef') seekRef!: any
 
-  audUrl: any
   currentTimeSubject = new BehaviorSubject<any>(0)
   currentTime$ = this.currentTimeSubject.asObservable()
 
@@ -31,19 +30,24 @@ export class PlayerComponent implements OnInit {
   recBlob!: Blob;
   // recBlob!: any;
   sourceNode!: any;
+  toneContext!: any;
 
   constructor(public sanitizer: DomSanitizer) { }
 
   ngOnInit(): void {
-    // need sourc node .resume() on play
-    this.audioStream = new AudioStream();
+    // this.audioStream = new AudioStream();
+
+    this.toneContext$.subscribe((v: any) => {
+      this.toneContext = v
+      console.log('tone ctx',v)
+    })
   
 
-    this.audioStream.getState().subscribe(state => {
-      console.log('state', state)
-      console.log('state', state.trackInfo.currentTrack)
-      this.state = state
-    })
+    // this.audioStream.getState().subscribe(state => {
+    //   console.log('state', state)
+    //   console.log('state', state.trackInfo.currentTrack)
+    //   this.state = state
+    // })
 
     /** recording for file download */
     this.recording$.subscribe((recordingBlobData: any) => {
@@ -69,9 +73,15 @@ export class PlayerComponent implements OnInit {
   }
 
   play() {
+    console.log('src buffer::',this.sourceNode.buffer)
+    Tone.start()
+    const player = new Tone.Player(this.sourceNode.buffer).toDestination()
+    console.log('player', player)
+    player.start()
     // this.audioStream.play()
     // this.getAudioEvents()
-    this.sourceNode.start()
+
+    // this.sourceNode.start()
 
   }
 
