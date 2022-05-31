@@ -41,7 +41,7 @@ export class TracksComponent implements OnInit {
 
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
       this.recordStream(stream)
-      // this.analyze3D(stream)
+      this.analyze3D(stream)
       console.log('audio state::', this.webAudioContext.state)
     })
   
