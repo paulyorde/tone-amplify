@@ -1,9 +1,5 @@
-<!-- <div *ngIf="audioURL$ | async"> -->
-    <div class="player-container">
-            <!-- <audio preload="auto" controls id='audio' #audioRef ontimeupdate="seek()">
-            <source [src]="audioURL$ | async" />
-        </audio> -->
 
+    <div class="player-container">
         <div class="player-play-container">
             <div>
                 <i class='fas fa-backward'></i>
@@ -14,12 +10,16 @@
             <div>
                 <i class='fas fa-forward'></i>
             </div>
-        </div>
-        <!-- <i (click)="pause()" class='fas fa-pause'></i>
-        <i (click)="stop()" class='fas fa-stop'></i> -->
         
-        <!-- <button (click)="pause()">pause</button>
-        <button (click)="stop()">stop</button> -->
+
+        </div>
+        <div>
+            <i (click)="pause()" class='fas fa-pause'></i>
+        </div>
+        <div>
+            <i (click)="stop()" class='fas fa-stop'></i>
+        </div>
+       
 
         <p>volume</p>
         <input #volumeRef type="range" value="0" min="0" max="1" step=".01" (change)="slideVoluem(volumeRef.value, $event)"/>
@@ -31,35 +31,8 @@
             <p>current track time</p>{{state.trackInfo.currentTime}}
         </div>
 
-        <!-- <a href="{{audUrl}}" download="auidotrack">
-            download
-        </a> -->
         <button (click)="download()">download</button>
 
         <input type="file" accept="audio/*" capture id="uploadAudioFie" (click)="upload()"/>
 
     </div>
-    
-<!-- </div> -->
-
-
-
-<!-- 
-     audioFile.addEventListener('timeupdate',function (){
-    	var duration = parseInt(audioFile.duration, 10);
-    	var elapsed = parseInt(audioFile.duration - audioFile.currentTime, 10);
-    	$("#handle").attr("max", parseInt(audioFile.duration, 10));
-        $("#handle").val(audioFile.currentTime);
-        $('#timeleft').text(convertTime(elapsed));
-        $('#length').text(convertTime(duration));
-    });   
-    
-    //convert time given in seconds to min:sec format
-    function convertTime (time) {
-    	var min = Math.floor(parseInt((time/60), 10));
-    	var sec = time - min*60;
-    	return (min + ':' + (sec > 9 ? sec : '0' + sec));
-    	
-    }
-    
- -->

@@ -29,6 +29,7 @@ export class PlayerComponent implements OnInit {
   audioStream!: AudioStream
   state!: StreamState
   recBlob!: Blob;
+  // recBlob!: any;
   sourceNode!: any;
 
   constructor(public sanitizer: DomSanitizer) { }
@@ -36,17 +37,7 @@ export class PlayerComponent implements OnInit {
   ngOnInit(): void {
     // need sourc node .resume() on play
     this.audioStream = new AudioStream();
-    this.audioURL$.subscribe((track: any) => {
-      /**
-       * gets URLBlob created in Track
-       */
-      this.sanitizer.bypassSecurityTrustUrl(track)
-      this.audioStream.loadTrack(track);
-      this.audUrl = this.sanitizer.bypassSecurityTrustUrl(track);
-      console.log(track, 'trck')
-      console.log(this.audUrl.changingThisBreaksApplicationSecurity, ' aud url')
-      console.log('stream', this.audioStream)
-    })
+  
 
     this.audioStream.getState().subscribe(state => {
       console.log('state', state)
@@ -54,37 +45,27 @@ export class PlayerComponent implements OnInit {
       this.state = state
     })
 
-    this.recording$.subscribe((v: any) => {
-      console.log('recording$',v)
-      this.recBlob = v
+    /** recording for file download */
+    this.recording$.subscribe((recordingBlobData: any) => {
+      console.log('recording$',recordingBlobData)
+      this.recBlob = recordingBlobData
     })
 
-    /**
-     * source coming should be able to play w/out setting url
-     */
+    /** source to play audio */
     this.sourceNode$.subscribe((sourceNode: any) => {
-      console.log(sourceNode,'source node subscribe')
-      let rec
-      if(sourceNode) {
-        //  rec = URL.createObjectURL(sourceNode.mediaStream)
-
-      }
-      console.log('recd::',rec)
       this.sourceNode = sourceNode
-      this.sanitizer.bypassSecurityTrustUrl(sourceNode)
-      this.audioStream.loadTrack(sourceNode);
-      this.audUrl = this.sanitizer.bypassSecurityTrustUrl(sourceNode);
-      
+      console.log('src node',sourceNode)
     })
 
   }
 
   pause() {
-    this.audioStream.pause()
+   
   }
 
   stop() {
-    this.audioStream.stop()
+    // this.audioStream.stop()
+    this.sourceNode.stop()
   }
 
   play() {
@@ -124,7 +105,8 @@ export class PlayerComponent implements OnInit {
     })
   }
 
- async download() {
+  async download() {
+   console.log('download')
     let anc =document.createElement('a')
     let rdr = new FileReader()
     rdr.readAsDataURL(this.recBlob)
@@ -134,7 +116,6 @@ export class PlayerComponent implements OnInit {
       anc.download = "audio"
       anc.click()
     }
-    
   }
 
 }

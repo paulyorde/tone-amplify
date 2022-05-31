@@ -29,3 +29,26 @@ navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
       //   this.webAudioContext.resume()
       // }
     })
+
+
+    ****************** time seek 
+    
+<!-- 
+     audioFile.addEventListener('timeupdate',function (){
+    	var duration = parseInt(audioFile.duration, 10);
+    	var elapsed = parseInt(audioFile.duration - audioFile.currentTime, 10);
+    	$("#handle").attr("max", parseInt(audioFile.duration, 10));
+        $("#handle").val(audioFile.currentTime);
+        $('#timeleft').text(convertTime(elapsed));
+        $('#length').text(convertTime(duration));
+    });   
+    
+    //convert time given in seconds to min:sec format
+    function convertTime (time) {
+    	var min = Math.floor(parseInt((time/60), 10));
+    	var sec = time - min*60;
+    	return (min + ':' + (sec > 9 ? sec : '0' + sec));
+    	
+    }
+    
+ -->

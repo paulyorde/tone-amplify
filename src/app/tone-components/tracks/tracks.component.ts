@@ -9,13 +9,8 @@ import * as Tone from 'tone';
   styleUrls: ['./tracks.component.css']
 })
 export class TracksComponent implements OnInit {
-  audioURLSubject = new BehaviorSubject<any>(null)
-  audioURL$ = this.audioURLSubject.asObservable()
-
   recordingSubject = new BehaviorSubject<any>(null)
   recording$ = this.recordingSubject.asObservable()
-
-  synth!: any
 
   _reverb = new Tone.Reverb({ "wet": 1, "decay": 1.9, "preDelay": 1.00 })
   // options = {debug: true, delayTime: "4n", feedBack: .04}
@@ -46,35 +41,13 @@ export class TracksComponent implements OnInit {
 
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
       this.recordStream(stream)
-      this.analyze3D(stream)
-     
-      
-      // if(!(this.webAudioContext.state === 'suspended')) {
-      //   console.log('running')
-      //   this.recordStream(stream)
-      //   this.analyze3D(stream)
-      // }
-
+      // this.analyze3D(stream)
       console.log('audio state::', this.webAudioContext.state)
-      
-
-    
-
-      // if(this.webAudioContext.state === 'suspended') {
-      //   this.webAudioContext.resume().then(function() {
-      //     console.log('resuming')
-      //   });
-      // }
-  
-      // if(resFlag) {
-      //   this.webAudioContext.resume()
-      // }
     })
   
     
   }
 
-  // async analyze3D(stream?: MediaStream) {
   async analyze3D(stream?: any) {
     this.sourceNode = this.webAudioContext.createMediaStreamSource(stream as MediaStream)
     let analyser = this.webAudioContext.createAnalyser()
@@ -151,32 +124,21 @@ export class TracksComponent implements OnInit {
         x += barWidth;
       }
     }
-
-
-
-
   }
-  /**
-   * start web recorder 
-   * send user stream to recorder
-   * push data as blobPart as the data comes in
-   * create object URL on stop recording
-   * send URL to Player 
-   * 
-   */
+
   recordStream(stream?: any) {
     this.webAudioContext.resume()
     const stopButton = document.getElementById('stop')
     const data: any[] | undefined = []
     let recording: any
     this.sourceNode = this.webAudioContext.createBufferSource()
-    // this.sourceNode = this.webAudioContext.createMediaStreamSource(stream)
     this.sourceNode.connect(this.webAudioContext.destination)
     recording = this.record(stream, data, this.sourceNode)
     
     if (stopButton) {
       stopButton.onclick = () => {
         recording.stop();
+        // this.recordingSubject.next(recording)
         // if (this.webAudioContext.state === 'running') {
         //   this.webAudioContext.suspend().then(function (v) {
             
@@ -197,17 +159,15 @@ export class TracksComponent implements OnInit {
     const recording = new MediaRecorder(stream)
     recording.start()
     recording.ondataavailable = event => data.push(event.data)
-    data.forEach((element: any) => {
-      console.log('data::', element)
-    });
-    console.log('data::', data)
     recording.onstop = () => {
+      /** Send to Download */
+      this.recordingSubject.next(new Blob(data))
       new Blob(data).arrayBuffer()
         .then(arrayBuffer => this.webAudioContext.decodeAudioData(arrayBuffer))
         .then(audioBuffer => sourceNode.buffer = audioBuffer)
-
-      this.sourceNodeSubject.next(sourceNode)
     }
+    /** Send to Player */
+    this.sourceNodeSubject.next(sourceNode)
 
     return recording
   }
