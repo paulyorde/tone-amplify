@@ -31,6 +31,10 @@ export class TracksComponent implements OnInit {
   sourceNode$ = this.sourceNodeSubject.asObservable()
 
   webAudioContext = new AudioContext()
+  webAudioContextStateSubject = new BehaviorSubject<any>(null);
+  webAudioContext$ = this.webAudioContextStateSubject.asObservable()
+
+  
 
   constructor(private sanitizer: DomSanitizer) { }
 
@@ -47,7 +51,9 @@ export class TracksComponent implements OnInit {
   startDeviceAudioInputStream =  () => {
     navigator.mediaDevices.getUserMedia({ audio: true }).then(async (stream) => {
       if(this.webAudioContext.state == 'suspended') {
+
        await this.webAudioContext.resume()
+       this.webAudioContextStateSubject.next('running')
       }
       this.recordStream(stream)
       this.analyze3D(stream)
@@ -57,6 +63,7 @@ export class TracksComponent implements OnInit {
   
     
   }
+
 
   async analyze3D(stream?: any) {
     this.sourceNode = this.webAudioContext.createMediaStreamSource(stream as MediaStream)
@@ -81,20 +88,32 @@ export class TracksComponent implements OnInit {
     let x;
     let ctx: any
     ctx = canvas.getContext('2d')
+    let reqId: number
+    
 
     function animate() {
-      console.log('animate')
       x = 0
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       analyser.getByteFrequencyData(dataArray);
       drawVisualiser(bufferLength, x, barWidth, barHeight, dataArray, ctx, canvas);
-      requestAnimationFrame(animate)
+      reqId = requestAnimationFrame(animate)
+      
     }
     animate()
 
+    this.webAudioContext$.subscribe(state => {
+      if(state=='suspended') {
+        console.log('uss state::', state)
+        cancelAnimationFrame(reqId)
+      } else if(state=='running') {
+        console.log('running state::', state)
+        // animate()
+      }
+    })
+    
+
     function drawVisualiser(bufferLength: number, x: number, barWidth: number, barHeight: number, dataArray: any, ctx: CanvasRenderingContext2D, canvas: { width: number; height: number; }) {
       for (let i = 0; i < bufferLength; i++) {
-        console.log('fuff lentgh', bufferLength)
         barHeight = dataArray[i] * 1.5;
         ctx.save();
         let x = Math.sin(i * Math.PI / 180) + 100;
@@ -136,9 +155,12 @@ export class TracksComponent implements OnInit {
     }
   }
 
+  reqId!: any
+
   async recordStream(stream?: any) {
     if(this.webAudioContext.state == 'suspended') {
      await this.webAudioContext.resume()
+     this.webAudioContextStateSubject.next('running')
     }
     const stopButton = document.getElementById('stop')
     const data: any[] | undefined = []
@@ -152,6 +174,7 @@ export class TracksComponent implements OnInit {
         recording.stop();
         if(this.webAudioContext.state == 'running') {
           await this.webAudioContext.suspend()
+          this.webAudioContextStateSubject.next('suspended')
         }
         // this.webAudioContext.suspend()
         // this.recordingSubject.next(recording)
