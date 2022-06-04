@@ -37,6 +37,16 @@ export class PlayerComponent implements OnInit {
   constructor(public sanitizer: DomSanitizer) { }
 
   ngOnInit(): void {
+    // this.player = new Tone.Player("https://tonejs.github.io/audio/loop/kick.mp3")
+    // this.player = new Tone.Player("https://tonejs.github.io/audio/loop/kick.mp3", async function(){
+    //   console.log('playing?')
+    //   // await  
+     
+    //   Tone.Transport.start();
+      
+    // }).toDestination().sync().start(0);
+   
+   
     // this.audioStream = new AudioStream();
 
     this.toneContext$.subscribe((v: any) => {
@@ -66,7 +76,7 @@ export class PlayerComponent implements OnInit {
   }
 
   pause() {
-   this.player
+   Tone.Transport.pause()
   }
 
   stop() {
@@ -76,15 +86,51 @@ export class PlayerComponent implements OnInit {
   }
 
   async  play() {
+    
+
     // console.log('src buffer::',this.sourceNode.buffer)
-    await Tone.start()
    
-    this.player = new Tone.Player(this.sourceNode.buffer).toDestination()
-    this.player.start()
+    await Tone.start()
+    this.player = new Tone.Player(this.sourceNode.buffer)
+    this.player.toDestination()
+
+    console.log('tone::', this.toneContext)
+   
+    // this.player = new Tone.Player({url: "src\assets\sound (1).mp3"}).toDestination().sync().start(.5)
+    // console.log('player state', this.player.state)
+    const now = Tone.now()
+    const time = this.player.now()
+    this.player.start(time)
+
+    Tone.Transport.start(time)
+    this.player.sync().start(time *10)
+
+    console.log('transport', Tone.Transport.state)
+   
+   
+   
+   
+    console.log('player state', this.player.state)
+   
+   
+   
+    // await Tone.start()
+   
+    // this.player = new Tone.Player(this.sourceNode.buffer).toDestination()
+    // this.player.start()
+
+
+    /**try this.blob or blob from endocer  */
+    // Tone.Transport.start()
+
+
+
+
+
     
     
     // let srcNode: AudioBufferSourceNode = this.sourceNode
-    // this.player.sync().start(srcNode.context.currentTime)
+    // this.player
     // this.player.volume.value = 5
     // console.log('player', this.player.state)
     
