@@ -2,6 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { BehaviorSubject, of } from 'rxjs';
 import * as Tone from 'tone';
+// import * as AUDIO_ENCODER from 'audio-encoder'
+const AUDIO_ENCODER = require('audio-encoder')
+import { saveAs } from 'file-saver'
 
 @Component({
   selector: 'app-tracks',
@@ -37,12 +40,14 @@ export class TracksComponent implements OnInit {
   webAudioContextStateSubject = new BehaviorSubject<any>(null);
   webAudioContext$ = this.webAudioContextStateSubject.asObservable()
   stop3d: boolean = false;
+  encoder = AUDIO_ENCODER
 
   
 
   constructor(private sanitizer: DomSanitizer) { }
 
   ngOnInit(): void {
+    console.log('encoder',this.encoder)
     Tone.setContext(this.webAudioContext)
     this.toneContextSubject.next(Tone.context)
     console.log('tone ctx', Tone.context)
@@ -211,6 +216,13 @@ export class TracksComponent implements OnInit {
         .then(arrayBuffer => this.webAudioContext.decodeAudioData(arrayBuffer))
         .then(audioBuffer => sourceNode.buffer = audioBuffer)
 
+      new Blob(data).arrayBuffer()
+
+        .then(arrayBuffer => this.webAudioContext.decodeAudioData(arrayBuffer))
+        .then(audioBuffer => this.encoder(audioBuffer, 'WAV', null, (blob:Blob) => {
+          saveAs(blob, 'sound.wav')
+        }))
+
     // this.audioUrlSubject.next(sourceNode.buffer)  
         
     }
@@ -219,4 +231,6 @@ export class TracksComponent implements OnInit {
 
     return recording
   }
+
+ 
 }
