@@ -5,6 +5,8 @@ import * as Tone from 'tone';
 const AUDIO_ENCODER = require('audio-encoder')
 import { saveAs } from 'file-saver'
 import * as THREE from 'three'
+import {LitElement, html} from 'lit';
+import {customElement, property} from 'lit/decorators.js';
 
 @Component({
   selector: 'app-tracks',
