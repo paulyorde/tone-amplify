@@ -66,7 +66,7 @@ export class TracksComponent implements OnInit {
 
   ngOnInit(): void {
     console.log('encoder',this.encoder)
-    Tone.setContext(this.webAudioContext)
+    // Tone.setContext(this.webAudioContext)
     this.toneContextSubject.next(Tone.context)
     console.log('tone ctx', Tone.context)
    
