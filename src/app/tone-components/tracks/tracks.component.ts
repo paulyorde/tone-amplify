@@ -11,7 +11,9 @@ import { saveAs } from 'file-saver'
   styleUrls: ['./tracks.component.css']
 })
 export class TracksComponent implements OnInit {
-  @ViewChild('canvas') canvasEle!: ElementRef<HTMLCanvasElement>
+  @ViewChild('canvas') canvasEle!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('stopRecord') stopRecord!: ElementRef<HTMLElement>
+
   ctx!: CanvasRenderingContext2D;
  
   recordingSubject = new BehaviorSubject<any>(null)
@@ -20,34 +22,20 @@ export class TracksComponent implements OnInit {
   toneContextSubject = new BehaviorSubject<any>(null)
   toneContext$ = this.toneContextSubject.asObservable()
 
-  audioUrlSubject = new BehaviorSubject<any>(null)
-  audioUrl$ = this.audioUrlSubject.asObservable() 
-  
-
   _reverb = new Tone.Reverb({ "wet": 1, "decay": 1.9, "preDelay": 1.00 })
   // options = {debug: true, delayTime: "4n", feedBack: .04}
   _pingPong = new Tone.PingPongDelay()
 
   userMediaRecording: any
+  toneStreamNode!: any
+  toneStreamNodeSubject = new BehaviorSubject<any>(null);
+  toneStreamNode$ = this.toneStreamNodeSubject.asObservable()
 
-  sourceNode!: any
-  analyzerSourceNode!: any
-
-  mediaRecorder: any
-
-  sourceNodeSubject = new BehaviorSubject<any>(null);
-  sourceNode$ = this.sourceNodeSubject.asObservable()
-
-  webAudioContext = new AudioContext()
-  webAudioContextStateSubject = new BehaviorSubject<any>(null);
-  webAudioContext$ = this.webAudioContextStateSubject.asObservable()
-  stop3d: boolean = false;
   encoder = AUDIO_ENCODER
 
-  fftSize = 2048;
   toneContext!: Tone.BaseContext;
   toneAnalyser!: AnalyserNode;
-  toneMediaStream: any;
+  toneMediaStream!: MediaStream;
   toneRecorder!: Tone.Recorder;
   userMedia!: Tone.UserMedia;
   reqId!: number;
@@ -77,18 +65,16 @@ export class TracksComponent implements OnInit {
     this.userMedia.open().then(async (stream) => {
       console.log('mic',stream._mediaStream.mediaStream)
       this.toneMediaStream = stream._mediaStream.mediaStream;
-      this.recordStream(stream._mediaStream.mediaStream)
-      this.analyze3D(stream._mediaStream.mediaStream)
+      this.recordStream()
+      this.analyze3D()
     });
   }
 
-  async recordStream(stream?: any) {
-    const stopButton = document.getElementById('stop')
-
+  async recordStream() {
     this.record()
     
-    if (stopButton) {
-      stopButton.onclick = async () => {
+    if (this.stopRecord) {
+      this.stopRecord.nativeElement.onclick = async () => {
         console.log('tone context state', this.toneContext.state)
         this.toneRecordedAudio = await this.toneRecorder.stop()
         this.toneAudioUrl = URL.createObjectURL(this.toneRecordedAudio);
@@ -129,42 +115,6 @@ export class TracksComponent implements OnInit {
     this.userMedia.connect(this.toneRecorder)
     this.toneRecorder.start()
 
-    
-    /**
-     * this can be a createMediaStreamDestination()
-     * which then can be trasnformed into objectBlobURL or WAV file 
-     * web audio book (93)
-     */
-
-
-    // TODO:  replace with Tone Recorder
-    // const recording = new MediaRecorder(stream)
-    // recording.start()
-    // recording.ondataavailable = event => data.push(event.data)
-
-    // recording.onstop = async () => {
-      // const rec = await this.toneRecorder.stop()
-      // const url = URL.createObjectURL(rec);
-      // console.log('url blob rec', url)
-      
-
-
-      /** Send to Download
-       * const arrayBuffer = new Blob(data).arrayBuffer
-       * next(arrayBuffer)
-       * apply encoder and savaAs in Player
-       */
-      // this.recordingSubject.next(new Blob(data))
-
-      /**
-       * sorce node used sent to player -play
-       */
-
-      // Replace with blob from Tone recorder 
-      // new Blob(data).arrayBuffer()
-      //   .then(arrayBuffer => this.webAudioContext.decodeAudioData(arrayBuffer))
-      //   .then(audioBuffer => sourceNode.buffer = audioBuffer)
-
     /**
      * Auto Downloads MP3
      */
@@ -176,20 +126,16 @@ export class TracksComponent implements OnInit {
         
     // }
     /** Send to Player */
-    // this.sourceNodeSubject.next(sourceNode)
-
-    // return recording
-        
   }
 
 
-  async analyze3D(stream?: any) {
+  async analyze3D() {
     const self = this
     console.log('this', self)
-    this.sourceNode = this.toneContext.createMediaStreamSource(stream as MediaStream)
+    this.toneStreamNode = this.toneContext.createMediaStreamSource(this.toneMediaStream as MediaStream)
 
     this.toneAnalyser = this.toneContext.createAnalyser();
-    await this.sourceNode.connect(this.toneAnalyser)
+    await this.toneStreamNode.connect(this.toneAnalyser)
     this.toneAnalyser.fftSize = 1024;
     const bufferLength = this.toneAnalyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
@@ -214,27 +160,6 @@ export class TracksComponent implements OnInit {
       self.reqId = requestAnimationFrame(animate)
     }
     animate()
-
-    // if(this.toneRecorder.state === 'stopped') {
-    //   console.log('record state after stop::')
-    //   this.stop3d = true
-    //   cancelAnimationFrame(this.reqId)
-    //   ctx.clearRect(0, 0, canvas.width, canvas.height);
-    // }
-
-    // this.recording$.subscribe(state => {
-    //   console.log('tone context state:', state)
-    //   if(state=='stopped') {
-    //     console.log('record state after stop::', state)
-    //     this.stop3d = true
-    //     cancelAnimationFrame(reqId)
-    //     ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-    //   } else if(state=='running') {
-    //     console.log('running state::', state)
-    //   }
-    // })
-    
 
     function drawVisualiser(bufferLength: number, x: number, barWidth: number, barHeight: number, dataArray: any, ctx: CanvasRenderingContext2D, canvas: { width: number; height: number; }) {
       for (let i = 0; i < bufferLength; i++) {

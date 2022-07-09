@@ -36,7 +36,7 @@ export class PlayerComponent implements OnInit {
       console.log('tone ctx',v)
     })
 
-    /** recording for file download */
+    /** recording from track */
     this.recording$.subscribe((recordingBlobData: AudioBufferSourceNode) => {
       console.log('recording$',recordingBlobData, 'type::', typeof recordingBlobData)
       this.recBlob = recordingBlobData
