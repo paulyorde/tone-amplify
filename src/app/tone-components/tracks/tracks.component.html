@@ -1,13 +1,13 @@
 <!-- <button (click)="_startRecording()">record</button> -->
 <canvas id="canvas" #canvas></canvas>
 
-<button (click)="startDeviceAudioInputStream();" id="start">record</button>
-<button id="stop" #stopRecord>stop</button>
+<button (click)="startRecording();" id="start">record</button>
+<button (click)="stopRecording()" id="stop">stop</button>
 
 
 
 <!-- <div *ngIf="audioURL$ | async"> -->
-    <app-player [toneContext$]="toneContext$" [recording$]="recording$"></app-player>
+    <app-player [recording$]="recording$"></app-player>
 <!-- </div> -->
 
 

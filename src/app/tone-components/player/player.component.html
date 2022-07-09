@@ -27,9 +27,7 @@
         <p>seek</p>
         <input #seekRef type="range" value="0" min="0" max="100" step=".1" (change)="seek(seekRef.value, $event)" />
 
-        <div *ngIf="state?.trackInfo?.currentTime">
-            <p>current track time</p>{{state.trackInfo.currentTime}}
-        </div>
+       
 
         <button (click)="download()">download</button>
 
