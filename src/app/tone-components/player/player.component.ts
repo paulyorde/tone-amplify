@@ -27,7 +27,7 @@ export class PlayerComponent implements OnInit {
 
   audioStream!: AudioStream
   state!: StreamState
-  recBlob!: Blob;
+  recBlob!: AudioBufferSourceNode;
   // recBlob!: any;
   sourceNode!: any;
   toneContext!: any;
@@ -62,8 +62,8 @@ export class PlayerComponent implements OnInit {
     // })
 
     /** recording for file download */
-    this.recording$.subscribe((recordingBlobData: any) => {
-      console.log('recording$',recordingBlobData)
+    this.recording$.subscribe((recordingBlobData: AudioBufferSourceNode) => {
+      console.log('recording$',recordingBlobData, 'type::', typeof recordingBlobData)
       this.recBlob = recordingBlobData
     })
 
@@ -90,8 +90,11 @@ export class PlayerComponent implements OnInit {
 
     // console.log('src buffer::',this.sourceNode.buffer)
    
-    await Tone.start()
-    this.player = new Tone.Player(this.sourceNode.buffer)
+    // await Tone.start()
+    // this.player = new Tone.Player(this.sourceNode.buffer)
+    if(this.recBlob.buffer) {
+      this.player = new Tone.Player(this.recBlob.buffer)
+    }
     this.player.toDestination()
 
     console.log('tone::', this.toneContext)
@@ -180,15 +183,15 @@ export class PlayerComponent implements OnInit {
 
   async download() {
    console.log('download')
-    let anc =document.createElement('a')
-    let rdr = new FileReader()
-    rdr.readAsDataURL(this.recBlob)
+    // let anc =document.createElement('a')
+    // let rdr = new FileReader()
+    // rdr.readAsDataURL(this.recBlob)
 
-    rdr.onload = () => {
-      anc.href = rdr.result as string
-      anc.download = "audio"
-      anc.click()
-    }
+    // rdr.onload = () => {
+    //   anc.href = rdr.result as string
+    //   anc.download = "audio"
+    //   anc.click()
+    // }
   }
 
 }

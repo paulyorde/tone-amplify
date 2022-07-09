@@ -52,24 +52,16 @@ export class TracksComponent implements OnInit {
   toneContext!: Tone.BaseContext;
   toneAnalyser!: AnalyserNode;
   toneMediaStream: any;
-
-  // audio.crossOrigin = "anonymous";
-  // audioLoader.load(stream, function(buffer) {
-  //   audio.setBuffer(buffer);
-  //   audio.setLoop(true);
-  //   audio.play();
-  // });
-
-  
+  toneRecorder!: Tone.Recorder;
+  userMedia!: Tone.UserMedia;
+  reqId!: number;
+  toneRecordedAudio!: Blob;
+  toneAudioUrl!: string;
 
   constructor(private sanitizer: DomSanitizer) { }
 
   ngOnInit(): void {
-    console.log('encoder',this.encoder)
-    // Tone.setContext(this.webAudioContext)
     this.toneContextSubject.next(Tone.context)
-    console.log('tone ctx', Tone.context)
-   
   }
 
   _startRecording = async () => {
@@ -77,11 +69,10 @@ export class TracksComponent implements OnInit {
   };
 
   startDeviceAudioInputStream =  () => {
-    const userMedia = new Tone.UserMedia().toDestination();
+    this.userMedia = new Tone.UserMedia().toDestination();
     this.toneContext = Tone.context;
-    
 
-    userMedia.open().then(async (stream) => {
+    this.userMedia.open().then(async (stream) => {
       console.log('mic',stream._mediaStream.mediaStream)
       this.toneMediaStream = stream._mediaStream.mediaStream;
       this.recordStream(stream._mediaStream.mediaStream)
@@ -89,10 +80,124 @@ export class TracksComponent implements OnInit {
     });
   }
 
+  async recordStream(stream?: any) {
+    const stopButton = document.getElementById('stop')
+    const data: any[] | undefined = []
+    // let recording: any
+    //todo tone create buffer source
+    // this.sourceNode = this.webAudioContext.createBufferSource()
+    // this.sourceNode.connect(this.webAudioContext.destination)
+    this.record(stream, data)
+    
+    if (stopButton) {
+      stopButton.onclick = async () => {
+        this.toneRecordedAudio = await this.toneRecorder.stop()
+        this.toneAudioUrl = URL.createObjectURL(this.toneRecordedAudio);
+        console.log('url blob rec', this.toneAudioUrl)
+        let toneBuffer = this.toneContext.createBufferSource()
+
+        this.toneRecordedAudio.arrayBuffer()
+        .then(arrayBuffer => this.toneContext.decodeAudioData(arrayBuffer))
+        .then(audioBuffer => {
+          if(audioBuffer) {
+            toneBuffer.buffer = audioBuffer
+            console.log('buffer is set::', toneBuffer.buffer)
+          } else {
+            console.log('no buffer set')
+          }
+        })
+
+        // new Blob(data).arrayBuffer()
+        // .then(arrayBuffer => this.webAudioContext.decodeAudioData(arrayBuffer))
+        // .then(audioBuffer => sourceNode.buffer = audioBuffer)
+
+        // get string from blob and pass to player
+      this.recordingSubject.next(toneBuffer)
+
+
+        
+
+        // recording.stop();
+        if(this.webAudioContext.state == 'running') {
+          await this.webAudioContext.suspend()
+          this.webAudioContextStateSubject.next('suspended')
+        }
+        // this.webAudioContext.suspend()
+        // this.recordingSubject.next(recording)
+        // if (this.webAudioContext.state === 'running') {
+        //   this.webAudioContext.suspend().then(function (v) {
+            
+        //     console.log('susspended')
+        //   })
+        // }
+        
+      }
+    }
+  }
+
+  record(stream: MediaStream, data: any) {
+    Tone.start()
+    this.toneRecorder = new Tone.Recorder()
+    this.userMedia.connect(this.toneRecorder)
+    this.toneRecorder.start()
+
+    
+    /**
+     * this can be a createMediaStreamDestination()
+     * which then can be trasnformed into objectBlobURL or WAV file 
+     * web audio book (93)
+     */
+
+
+    // TODO:  replace with Tone Recorder
+    // const recording = new MediaRecorder(stream)
+    // recording.start()
+    // recording.ondataavailable = event => data.push(event.data)
+
+    // recording.onstop = async () => {
+      // const rec = await this.toneRecorder.stop()
+      // const url = URL.createObjectURL(rec);
+      // console.log('url blob rec', url)
+      
+
+
+      /** Send to Download
+       * const arrayBuffer = new Blob(data).arrayBuffer
+       * next(arrayBuffer)
+       * apply encoder and savaAs in Player
+       */
+      // this.recordingSubject.next(new Blob(data))
+
+      /**
+       * sorce node used sent to player -play
+       */
+
+      // Replace with blob from Tone recorder 
+      // new Blob(data).arrayBuffer()
+      //   .then(arrayBuffer => this.webAudioContext.decodeAudioData(arrayBuffer))
+      //   .then(audioBuffer => sourceNode.buffer = audioBuffer)
+
+    /**
+     * Auto Downloads MP3
+     */
+      // new Blob(data).arrayBuffer()
+      //   .then(arrayBuffer => this.webAudioContext.decodeAudioData(arrayBuffer))
+      //   .then(audioBuffer => this.encoder(audioBuffer, 'WAV', (v: any) => console.log('happeing now',v), (blob:Blob) => {
+      //     saveAs(blob, 'sound.mp3')
+      //   }))
+        
+    // }
+    /** Send to Player */
+    // this.sourceNodeSubject.next(sourceNode)
+
+    // return recording
+        
+  }
+
 
   async analyze3D(stream?: any) {
     const self = this
-    // this.sourceNode = this.webAudioContext.createMediaStreamSource(stream as MediaStream)
+    console.log('this', self)
     this.sourceNode = this.toneContext.createMediaStreamSource(stream as MediaStream)
 
     this.toneAnalyser = this.toneContext.createAnalyser();
@@ -101,36 +206,23 @@ export class TracksComponent implements OnInit {
     const bufferLength = this.toneAnalyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
 
-    // let analyser = this.webAudioContext.createAnalyser()
-    // await this.sourceNode.connect(analyser)
-    // analyser.fftSize = 512;
-    // const bufferLength = analyser.frequencyBinCount;
-    // const dataArray = new Uint8Array(bufferLength);
     const barWidth = 15;
     let barHeight: number;
     let canvas = document.getElementById('canvas') as HTMLCanvasElement
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    let x;
+    let x = 0
+
     let ctx: any
     ctx = canvas.getContext('2d')
     let reqId: number
     
 
     function animate() {
-      
-      x = 0
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       self.toneAnalyser.getByteFrequencyData(dataArray);
-      // analyser.getByteFrequencyData(dataArray);
       drawVisualiser(bufferLength, x, barWidth, barHeight, dataArray, ctx, canvas);
-      
       reqId = requestAnimationFrame(animate)
-
-      if(self.stop3d) {
-        console.log('3d stop')
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-      }
     }
     animate()
 
@@ -140,7 +232,6 @@ export class TracksComponent implements OnInit {
         this.stop3d = true
         cancelAnimationFrame(reqId)
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
         
       } else if(state=='running') {
         console.log('running state::', state)
@@ -149,7 +240,6 @@ export class TracksComponent implements OnInit {
     
 
     function drawVisualiser(bufferLength: number, x: number, barWidth: number, barHeight: number, dataArray: any, ctx: CanvasRenderingContext2D, canvas: { width: number; height: number; }) {
-    
       for (let i = 0; i < bufferLength; i++) {
         barHeight = dataArray[i] * 1.5;
         ctx.save();
@@ -192,99 +282,7 @@ export class TracksComponent implements OnInit {
     }
   }
 
-  reqId!: any
-
-  async recordStream(stream?: any) {
-    // if(this.webAudioContext.state == 'suspended') {
-    //  await this.webAudioContext.resume()
-    //  this.webAudioContextStateSubject.next('running')
-    // }
-    const stopButton = document.getElementById('stop')
-    const data: any[] | undefined = []
-    let recording: any
-    // tone create buffer source
-    this.sourceNode = this.webAudioContext.createBufferSource()
-    this.sourceNode.connect(this.webAudioContext.destination)
-    recording = this.record(stream, data, this.sourceNode)
-    
-    if (stopButton) {
-      stopButton.onclick = async () => {
-        recording.stop();
-        if(this.webAudioContext.state == 'running') {
-          await this.webAudioContext.suspend()
-          this.webAudioContextStateSubject.next('suspended')
-        }
-        // this.webAudioContext.suspend()
-        // this.recordingSubject.next(recording)
-        // if (this.webAudioContext.state === 'running') {
-        //   this.webAudioContext.suspend().then(function (v) {
-            
-        //     console.log('susspended')
-        //   })
-        // }
-        
-      }
-    }
-  }
-
-  record(stream: MediaStream, data: any, sourceNode: any) {
-    /**
-     * this can be a createMediaStreamDestination()
-     * which then can be trasnformed into objectBlobURL or WAV file 
-     * web audio book (93)
-     */
-
-
-    // TODO:  replace with Tone Recorder
-    const recording = new MediaRecorder(stream)
-    recording.start()
-    recording.ondataavailable = event => data.push(event.data)
-
-    recording.onstop = () => {
-      /** Send to Download
-       * const arrayBuffer = new Blob(data).arrayBuffer
-       * next(arrayBuffer)
-       * apply encoder and savaAs in Player
-       */
-      this.recordingSubject.next(new Blob(data))
-
-      /**
-       * sorce node used sent to player -play
-       */
-
-      // Replace with blob from Tone recorder 
-      new Blob(data).arrayBuffer()
-        .then(arrayBuffer => this.webAudioContext.decodeAudioData(arrayBuffer))
-        .then(audioBuffer => sourceNode.buffer = audioBuffer)
-
-     
-
-    //   let rdr = new FileReader()
-    // rdr.readAsDataURL(this.recBlob)
-      new Blob(data).arrayBuffer()
-        .then(arrayBuffer => this.webAudioContext.decodeAudioData(arrayBuffer))
-        .then(audioBuffer => this.encoder(audioBuffer, 'WAV', (v: any) => console.log('happeing now',v), (blob:Blob) => {
-          saveAs(blob, 'sound.mp3')
-        }))
-
-        // new Blob(data).arrayBuffer()
-        // .then(arrayBuffer => this.webAudioContext.decodeAudioData(arrayBuffer))
-        // .then(audioBuffer => this.encoder(audioBuffer, 'WAV', (v: any) => console.log('happeing now',v), (blob:Blob) => {
-        //   // pass blob to three as obj blob
-        //   // aduio setbuffer
-        //    this.audio.setBuffer(audioBuffer);
-        //    console.log('3 buffer', this.audio.buffer)
-
-        // }))
-
-    // this.audioUrlSubject.next(sourceNode.buffer)  
-        
-    }
-    /** Send to Player */
-    this.sourceNodeSubject.next(sourceNode)
-
-    return recording
-  }
+  
 
  
 }
