@@ -1,12 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { BehaviorSubject, of } from 'rxjs';
 import * as Tone from 'tone';
 const AUDIO_ENCODER = require('audio-encoder')
 import { saveAs } from 'file-saver'
-import * as THREE from 'three'
-import {LitElement, html} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
 
 @Component({
   selector: 'app-tracks',
@@ -14,6 +11,8 @@ import {customElement, property} from 'lit/decorators.js';
   styleUrls: ['./tracks.component.css']
 })
 export class TracksComponent implements OnInit {
+  @ViewChild('canvas') canvasEle!: ElementRef<HTMLCanvasElement>
+  ctx!: CanvasRenderingContext2D;
  
   recordingSubject = new BehaviorSubject<any>(null)
   recording$ = this.recordingSubject.asObservable()
@@ -46,9 +45,6 @@ export class TracksComponent implements OnInit {
   encoder = AUDIO_ENCODER
 
   fftSize = 2048;
-  audioLoader = new THREE.AudioLoader();
-  listener = new THREE.AudioListener();
-  audio = new THREE.Audio(this.listener);
   toneContext!: Tone.BaseContext;
   toneAnalyser!: AnalyserNode;
   toneMediaStream: any;
@@ -62,6 +58,12 @@ export class TracksComponent implements OnInit {
 
   ngOnInit(): void {
     this.toneContextSubject.next(Tone.context)
+  }
+
+  ngAfterViewInit(): void {
+    if(this.canvasEle) {
+      this.ctx = this.canvasEle.nativeElement.getContext('2d') as CanvasRenderingContext2D;
+    }
   }
 
   _startRecording = async () => {
@@ -82,15 +84,12 @@ export class TracksComponent implements OnInit {
 
   async recordStream(stream?: any) {
     const stopButton = document.getElementById('stop')
-    const data: any[] | undefined = []
-    // let recording: any
-    //todo tone create buffer source
-    // this.sourceNode = this.webAudioContext.createBufferSource()
-    // this.sourceNode.connect(this.webAudioContext.destination)
-    this.record(stream, data)
+
+    this.record()
     
     if (stopButton) {
       stopButton.onclick = async () => {
+        console.log('tone context state', this.toneContext.state)
         this.toneRecordedAudio = await this.toneRecorder.stop()
         this.toneAudioUrl = URL.createObjectURL(this.toneRecordedAudio);
         console.log('url blob rec', this.toneAudioUrl)
@@ -106,37 +105,26 @@ export class TracksComponent implements OnInit {
             console.log('no buffer set')
           }
         })
+        this.recordingSubject.next(toneBuffer)
 
-        // new Blob(data).arrayBuffer()
-        // .then(arrayBuffer => this.webAudioContext.decodeAudioData(arrayBuffer))
-        // .then(audioBuffer => sourceNode.buffer = audioBuffer)
-
-        // get string from blob and pass to player
-      this.recordingSubject.next(toneBuffer)
-
-
-        
-
-        // recording.stop();
-        if(this.webAudioContext.state == 'running') {
-          await this.webAudioContext.suspend()
-          this.webAudioContextStateSubject.next('suspended')
+        if(this.toneRecorder.state == 'stopped') {
+          console.log('tone context state', this.toneContext.state)
+          console.log('tone recorder state', this.toneRecorder.state)
+          
         }
-        // this.webAudioContext.suspend()
-        // this.recordingSubject.next(recording)
-        // if (this.webAudioContext.state === 'running') {
-        //   this.webAudioContext.suspend().then(function (v) {
-            
-        //     console.log('susspended')
-        //   })
-        // }
-        
+
+        if(this.toneRecorder.state === 'stopped') {
+          console.log('record state stop::')
+          cancelAnimationFrame(this.reqId)
+          this.ctx.clearRect(0, 0, this.canvasEle.nativeElement.width, this.canvasEle.nativeElement.height);
+        }
       }
     }
   }
 
-  record(stream: MediaStream, data: any) {
+  record() {
     Tone.start()
+    this.toneContext.resume;
     this.toneRecorder = new Tone.Recorder()
     this.userMedia.connect(this.toneRecorder)
     this.toneRecorder.start()
@@ -202,7 +190,7 @@ export class TracksComponent implements OnInit {
 
     this.toneAnalyser = this.toneContext.createAnalyser();
     await this.sourceNode.connect(this.toneAnalyser)
-    this.toneAnalyser.fftSize = 512;
+    this.toneAnalyser.fftSize = 1024;
     const bufferLength = this.toneAnalyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
 
@@ -214,29 +202,38 @@ export class TracksComponent implements OnInit {
     let x = 0
 
     let ctx: any
-    ctx = canvas.getContext('2d')
-    let reqId: number
+    ctx = this.ctx
+    // ctx = canvas.getContext('2d')
+    this.reqId
     
 
     function animate() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       self.toneAnalyser.getByteFrequencyData(dataArray);
       drawVisualiser(bufferLength, x, barWidth, barHeight, dataArray, ctx, canvas);
-      reqId = requestAnimationFrame(animate)
+      self.reqId = requestAnimationFrame(animate)
     }
     animate()
 
-    this.webAudioContext$.subscribe(state => {
-      if(state=='suspended') {
-        console.log('uss state::', state)
-        this.stop3d = true
-        cancelAnimationFrame(reqId)
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // if(this.toneRecorder.state === 'stopped') {
+    //   console.log('record state after stop::')
+    //   this.stop3d = true
+    //   cancelAnimationFrame(this.reqId)
+    //   ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // }
+
+    // this.recording$.subscribe(state => {
+    //   console.log('tone context state:', state)
+    //   if(state=='stopped') {
+    //     console.log('record state after stop::', state)
+    //     this.stop3d = true
+    //     cancelAnimationFrame(reqId)
+    //     ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-      } else if(state=='running') {
-        console.log('running state::', state)
-      }
-    })
+    //   } else if(state=='running') {
+    //     console.log('running state::', state)
+    //   }
+    // })
     
 
     function drawVisualiser(bufferLength: number, x: number, barWidth: number, barHeight: number, dataArray: any, ctx: CanvasRenderingContext2D, canvas: { width: number; height: number; }) {
