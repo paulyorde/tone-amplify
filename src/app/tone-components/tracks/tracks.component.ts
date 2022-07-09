@@ -32,7 +32,6 @@ export class TracksComponent implements OnInit {
   userMedia!: Tone.UserMedia;
   reqId!: number;
   toneRecordedAudio!: Blob;
-  toneAudioUrl!: string;
 
   constructor(private sanitizer: DomSanitizer) { }
 
@@ -66,8 +65,6 @@ export class TracksComponent implements OnInit {
     let toneBuffer = this.toneContext.createBufferSource()
 
     this.toneRecordedAudio = await this.toneRecorder.stop()
-
-    this.toneAudioUrl = URL.createObjectURL(this.toneRecordedAudio);
 
     this.toneRecordedAudio.arrayBuffer()
     .then(arrayBuffer => this.toneContext.decodeAudioData(arrayBuffer))
