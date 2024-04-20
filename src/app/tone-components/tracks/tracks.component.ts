@@ -56,8 +56,6 @@ export class TracksComponent implements OnInit {
   //   audio.play();
   // });
 
-  
-
   constructor(private sanitizer: DomSanitizer) { }
 
   ngOnInit(): void {
@@ -73,9 +71,6 @@ export class TracksComponent implements OnInit {
 
   startDeviceAudioInputStream =  () => {
     navigator.mediaDevices.getUserMedia({ audio: true }).then(async (stream) => {
-      
-
-
       if(this.webAudioContext.state == 'suspended') {
 
        await this.webAudioContext.resume()
@@ -84,10 +79,7 @@ export class TracksComponent implements OnInit {
       this.recordStream(stream)
       this.analyze3D(stream)
       console.log('audio state::', this.webAudioContext.state)
-      
     })
-  
-    
   }
 
 
@@ -203,15 +195,6 @@ export class TracksComponent implements OnInit {
           await this.webAudioContext.suspend()
           this.webAudioContextStateSubject.next('suspended')
         }
-        // this.webAudioContext.suspend()
-        // this.recordingSubject.next(recording)
-        // if (this.webAudioContext.state === 'running') {
-        //   this.webAudioContext.suspend().then(function (v) {
-            
-        //     console.log('susspended')
-        //   })
-        // }
-        
       }
     }
   }
@@ -227,41 +210,17 @@ export class TracksComponent implements OnInit {
     recording.ondataavailable = event => data.push(event.data)
 
     recording.onstop = () => {
-      /** Send to Download
-       * const arrayBuffer = new Blob(data).arrayBuffer
-       * next(arrayBuffer)
-       * apply encoder and savaAs in Player
-       */
       this.recordingSubject.next(new Blob(data))
 
-      /**
-       * sorce node used sent to player -play
-       */
       new Blob(data).arrayBuffer()
         .then(arrayBuffer => this.webAudioContext.decodeAudioData(arrayBuffer))
         .then(audioBuffer => sourceNode.buffer = audioBuffer)
 
-     
-
-    //   let rdr = new FileReader()
-    // rdr.readAsDataURL(this.recBlob)
       new Blob(data).arrayBuffer()
         .then(arrayBuffer => this.webAudioContext.decodeAudioData(arrayBuffer))
         .then(audioBuffer => this.encoder(audioBuffer, 'WAV', (v: any) => console.log('happeing now',v), (blob:Blob) => {
           saveAs(blob, 'sound.mp3')
         }))
-
-        // new Blob(data).arrayBuffer()
-        // .then(arrayBuffer => this.webAudioContext.decodeAudioData(arrayBuffer))
-        // .then(audioBuffer => this.encoder(audioBuffer, 'WAV', (v: any) => console.log('happeing now',v), (blob:Blob) => {
-        //   // pass blob to three as obj blob
-        //   // aduio setbuffer
-        //    this.audio.setBuffer(audioBuffer);
-        //    console.log('3 buffer', this.audio.buffer)
-
-        // }))
-
-    // this.audioUrlSubject.next(sourceNode.buffer)  
         
     }
     /** Send to Player */
